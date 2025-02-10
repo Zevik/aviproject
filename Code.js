@@ -1,6 +1,5 @@
 // קבועים
 const MAIN_SPREADSHEET_ID = '1UxQn7mAinamXXZ6WuK0Zp8aRdfYqXCQ6mf-n4fYVZ8c';
-const SOCIAL_TERMS_SPREADSHEET_ID = '1ejV2ooTn9I2Gn3FrTGmHfrJ8hcz17178ipui2AQ_gZY';
 
 function doGet(e) {
   const page = e.parameter.page || 'Index';
@@ -11,7 +10,6 @@ function doGet(e) {
 
 function getMonthlyReportData(selectedMonth, shiftType) {
   const mainSheet = SpreadsheetApp.openById(MAIN_SPREADSHEET_ID).getSheetByName('כרטיס משמרת');
-  const logSheet = SpreadsheetApp.openById(MAIN_SPREADSHEET_ID).getSheetByName('LOG');
   const data = mainSheet.getRange('A2:W' + mainSheet.getLastRow()).getValues();
   
   const [month, year] = selectedMonth.split('.');
@@ -24,11 +22,6 @@ function getMonthlyReportData(selectedMonth, shiftType) {
            date.getFullYear() === parseInt(year) &&
            row[2] === shiftType;  // Column C - shift type
   });
-
-  logSheet.appendRow(['--- התחלת חישוב דוח חודשי ---']);
-  logSheet.appendRow(['חודש:', selectedMonth]);
-  logSheet.appendRow(['סוג משמרת:', shiftType]);
-  logSheet.appendRow(['מספר רשומות:', filteredData.length]);
 
   // Group by Rofan
   const rofanimData = {};
@@ -47,11 +40,6 @@ function getMonthlyReportData(selectedMonth, shiftType) {
         socialTerms: getSocialTermsData(rofanId, selectedMonth).socialTerms,
         employerCost: getSocialTermsData(rofanId, selectedMonth).employerCost
       };
-
-      logSheet.appendRow(['--- נתוני רפואן ---']);
-      logSheet.appendRow(['שם:', rofanName]);
-      logSheet.appendRow(['ת.ז.:', rofanId]);
-      logSheet.appendRow(['תעריף שעתי:', rofanimData[rofanName].hourlyRate]);
     }
 
     // Update shifts count
@@ -76,29 +64,11 @@ function getMonthlyReportData(selectedMonth, shiftType) {
       } else if (matchWithSpace) {
         hours = parseInt(matchWithSpace[1]);
         minutes = parseInt(matchWithSpace[2]);
-      } else {
-        logSheet.appendRow(['שגיאה בפרסור משך משמרת:', duration]);
       }
       
       rofanimData[rofanName].totalHours += hours + (minutes / 60);
-      
-      logSheet.appendRow(['--- פרטי משמרת ---']);
-      logSheet.appendRow(['תאריך:', row[0]]);
-      logSheet.appendRow(['משך:', duration]);
-      logSheet.appendRow(['שעות מחושבות:', `${hours}:${minutes}`]);
     }
   });
-
-  // Log final results
-  Object.values(rofanimData).forEach(rofan => {
-    logSheet.appendRow(['--- סיכום רפואן ---']);
-    logSheet.appendRow(['שם:', rofan.name]);
-    logSheet.appendRow(['סה"כ שעות:', rofan.totalHours]);
-    logSheet.appendRow(['משמרות בית:', rofan.homeShifts]);
-    logSheet.appendRow(['משמרות מרפאה:', rofan.clinicShifts]);
-  });
-
-  logSheet.appendRow(['--- סיום חישוב דוח חודשי ---']);
 
   return Object.values(rofanimData);
 }
@@ -138,7 +108,6 @@ function getRofimList() {
 
 function getRofanData(rofanName, selectedMonth) {
  const mainSheet = SpreadsheetApp.openById(MAIN_SPREADSHEET_ID).getSheetByName('כרטיס משמרת');
- const logSheet = SpreadsheetApp.openById(MAIN_SPREADSHEET_ID).getSheetByName('LOG');
  
  // מציאת כל הרשומות של הרפואן בחודש הנבחר
  const data = mainSheet.getRange('A2:J' + mainSheet.getLastRow()).getValues();
@@ -146,13 +115,6 @@ function getRofanData(rofanName, selectedMonth) {
  // קבלת תעודת זהות של הרפואן
  const rofanId = getRofanId(rofanName);
 
- // לוג
- logSheet.appendRow(['--- התחלת חישוב נתונים ---']);
- logSheet.appendRow(['תאריך', new Date()]);
- logSheet.appendRow(['רפואן', rofanName]);
- logSheet.appendRow(['ת.ז. רפואן', rofanId]);
- logSheet.appendRow(['חודש נבחר', selectedMonth]);
- 
  // פילטור לפי חודש ורפואן
  const [month, year] = selectedMonth.split('.');
  const filteredData = data.filter(row => {
@@ -163,22 +125,9 @@ function getRofanData(rofanName, selectedMonth) {
           row[1] === rofanName;  // עמודה B - שם רפואן
  });
 
- logSheet.appendRow(['מספר רשומות שנמצאו', filteredData.length]);
-
  // חישוב מספר המשמרות לפי מיקום
  const homeShifts = filteredData.filter(row => row[9] === 'בית').length;
  const clinicShifts = filteredData.filter(row => row[9] === 'מרפאה').length;
-
- // לוג פירוט המשמרות שנמצאו
- filteredData.forEach((row, index) => {
-   logSheet.appendRow([
-     `--- משמרת ${index + 1} ---`,
-     'תאריך:', row[0],
-     'סוג משמרת:', row[2],
-     'משך:', row[7],
-     'מיקום:', row[9]
-   ]);
- });
 
  // חישוב שעות לפי סוג משמרת
  const hoursByType = {};
@@ -198,22 +147,11 @@ function getRofanData(rofanName, selectedMonth) {
      const hours = parseInt(matchWithSpace[1]);
      const minutes = parseInt(matchWithSpace[2]);
      hoursByType[shiftType] += hours + (minutes / 60);
-   } else {
-     logSheet.appendRow(['שגיאה בפרסור משך משמרת:', duration]);
    }
- });
-
- // לוג סיכום שעות לפי סוג
- logSheet.appendRow(['--- סיכום שעות לפי סוג ---']);
- Object.entries(hoursByType).forEach(([type, hours]) => {
-   logSheet.appendRow(['סוג:', type, 'שעות:', hours]);
  });
 
  // קבלת נתונים סוציאליים
  const socialData = getSocialTermsData(rofanId, selectedMonth);
- logSheet.appendRow(['--- נתונים סוציאליים ---']);
- logSheet.appendRow(['תנאים סוציאליים:', socialData.socialTerms]);
- logSheet.appendRow(['עלות מעסיק:', socialData.employerCost]);
 
  const result = {
    name: rofanName,
@@ -225,14 +163,6 @@ function getRofanData(rofanName, selectedMonth) {
    socialTerms: socialData.socialTerms,
    employerCost: socialData.employerCost
  };
-
- // לוג תוצאה סופית
- logSheet.appendRow(['--- תוצאה סופית ---']);
- logSheet.appendRow(['סה"כ שעות:', result.totalHours]);
- logSheet.appendRow(['משמרות בית:', result.homeShifts]);
- logSheet.appendRow(['משמרות מרפאה:', result.clinicShifts]);
- logSheet.appendRow(['תעריף שעתי:', result.hourlyRate]);
- logSheet.appendRow(['--- סיום חישוב נתונים ---']);
 
  return result;
 }
@@ -394,17 +324,19 @@ function getSocialTermsData(rofanId, selectedMonth) {
   if (!rofanId) return { socialTerms: 0, employerCost: 0 };
   
   try {
-    const socialSheet = SpreadsheetApp.openById(SOCIAL_TERMS_SPREADSHEET_ID).getSheetByName(selectedMonth);
+    const socialSheet = SpreadsheetApp.openById(MAIN_SPREADSHEET_ID).getSheetByName('תנאים סוציאליים');
     if (!socialSheet) return { socialTerms: 0, employerCost: 0 };
     
-    const data = socialSheet.getRange('D:R').getValues();
-    const row = data.find(row => row[0] === rofanId);
+    // Assuming the social terms data is directly available in the 'תנאים סוציאליים' sheet
+    const data = socialSheet.getRange('A:Z').getValues(); // Adjust range as needed
+    const row = data.find(row => row[1] == selectedMonth && row[0] == rofanId); // Find the row matching the rofanId and month
     
     return {
-      socialTerms: row ? row[6] : 0,  // עמודה J
-      employerCost: row ? row[14] : 0 // עמודה R
+      socialTerms: row ? row[2] : 0,  // Column C (example)
+      employerCost: row ? row[3] : 0   // Column D (example)
     };
   } catch (e) {
+    Logger.log(e);
     return { socialTerms: 0, employerCost: 0 };
   }
 }
