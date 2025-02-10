@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>חישוב שעות ותשלומים</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-6 max-w-4xl">
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">חישוב שעות ותשלומים</h1>
+      
+      <!-- פילטרים -->
+<div class="bg-gray-50 rounded-lg p-4 mb-6 space-y-4">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">בחר חודש</label>
+      <select id="monthSelect" onchange="this.blur(); handleMonthChange()" 
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </select>
+    </div>
+    
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">סוג תצוגה</label>
+      <select id="displayType" onchange="this.blur(); handleDisplayTypeChange()"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="rofan">רפואן</option>
+        <option value="rofe">רופא</option>
+      </select>
+    </div>
+    
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">סוג משמרת</label>
+      <select id="shiftType" onchange="this.blur(); handleShiftTypeChange()"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="all">הכל</option>
+        <option value="refuah_shlema">רפואה שלמה</option>
+        <option value="other">מיזם טריו ואחר</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">בחר שם</label>
+      <select id="nameSelect" onchange="this.blur(); handleNameChange()"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- תצוגת רפואן -->
+<div id="rofanDisplay" class="bg-white rounded-lg">
+  <div class="space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <div class="text-sm text-gray-600">סה"כ משמרות מהבית</div>
+        <div id="homeShifts" class="text-2xl font-bold text-blue-600">0</div>
+      </div>
+      
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <div class="text-sm text-gray-600">סה"כ משמרות במרפאה</div>
+        <div id="clinicShifts" class="text-2xl font-bold text-blue-600">0</div>
+      </div>
+    </div>
+
+    <!-- חלוקת שעות לפי סוג משמרת -->
+    <div class="bg-indigo-50 p-4 rounded-lg">
+      <div class="text-sm text-gray-600 mb-3">חלוקת שעות לפי סוג משמרת:</div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">רפואה שלמה</span>
+          <span id="hoursRefuahShlema" class="font-bold">0</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">מיזם טריו</span>
+          <span id="hoursMizamTrio" class="font-bold">0</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">דמו</span>
+          <span id="hoursDemo" class="font-bold">0</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">הכשרה</span>
+          <span id="hoursHachshara" class="font-bold">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gray-50 p-4 rounded-lg">
+      <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+        <span class="text-gray-600">סה"כ שעות</span>
+        <span id="totalHours" class="font-bold">0</span>
+      </div>
+      
+      <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+        <span class="text-gray-600">שכר שעתי</span>
+        <span id="hourlyRate" class="font-bold">0 ₪</span>
+      </div>
+      
+      <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+        <span class="text-gray-600">תנאים סוציאליים</span>
+        <span id="socialTerms" class="font-bold">0 ₪</span>
+      </div>
+      
+      <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+        <span class="text-gray-600">עלות מעסיק</span>
+        <span id="employerCost" class="font-bold">0 ₪</span>
+      </div>
+    </div>
+
+    <div class="bg-green-50 p-4 rounded-lg">
+      <div class="flex justify-between items-center">
+        <span class="text-lg font-medium text-gray-700">סה"כ תשלום</span>
+        <span id="totalPayment" class="text-2xl font-bold text-green-600">0 ₪</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- תצוגת רופא -->
+<div id="rofeDisplay" class="bg-white rounded-lg hidden">
+  <div class="space-y-4">
+    <div class="grid grid-cols-1 gap-4">
+      <!-- סה"כ משמרות -->
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <div class="text-sm text-gray-600">סה"כ משמרות</div>
+        <div id="totalShifts" class="text-2xl font-bold text-blue-600">0</div>
+      </div>
+      
+      <!-- שעות דמו -->
+      <div id="demoHoursSection" class="bg-indigo-50 p-4 rounded-lg hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="text-sm text-gray-600">סה"כ שעות דמו</div>
+            <div id="demoHours" class="text-xl font-bold text-indigo-600">0</div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">עלות לשעת דמו</div>
+            <div id="demoRate" class="text-xl font-bold text-indigo-600">0 ₪</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- שעות מיזם טריו -->
+      <div id="trioHoursSection" class="bg-indigo-50 p-4 rounded-lg hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="text-sm text-gray-600">סה"כ שעות מיזם טריו</div>
+            <div id="trioHours" class="text-xl font-bold text-indigo-600">0</div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-600">עלות לשעת מיזם טריו</div>
+            <div id="trioRate" class="text-xl font-bold text-indigo-600">0 ₪</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- שעות רפואה שלמה -->
+<div id="refuahShlemaSection" class="bg-indigo-50 p-4 rounded-lg hidden">
+  <div class="flex justify-between items-center">
+    <div>
+      <div class="text-sm text-gray-600">סה"כ שעות רפואה שלמה</div>
+      <div id="refuahShlemaHours" class="text-xl font-bold text-indigo-600">0</div>
+    </div>
+    <div>
+      <div class="text-sm text-gray-600">עלות לשעת רפואה שלמה</div>
+      <div id="refuahShlemaRate" class="text-xl font-bold text-indigo-600">0 ₪</div>
+    </div>
+  </div>
+</div>
+
+    <!-- סה"כ תשלום -->
+    <div class="bg-green-50 p-4 rounded-lg">
+      <div class="flex justify-between items-center">
+        <span class="text-lg font-medium text-gray-700">סה"כ לתשלום (כולל מע"מ)</span>
+        <span id="rofeTotalPayment" class="text-2xl font-bold text-green-600">0 ₪</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script>
+     let currentDisplayType = 'rofan';
+    
+    window.onload = function() {
+      google.script.run
+        .withSuccessHandler(initializeMonthSelect)
+        .getAvailableMonths();
+    };
+    
+    function initializeMonthSelect(months) {
+      const select = document.getElementById('monthSelect');
+      select.innerHTML = months.map(month => 
+        `<option value="${month}">${month}</option>`
+      ).join('');
+      
+      google.script.run
+        .withSuccessHandler(defaultMonth => {
+          if (months.includes(defaultMonth)) {
+            select.value = defaultMonth;
+          }
+          loadNamesList();
+        })
+        .getDefaultMonth();
+    }
+    
+    function loadNamesList() {
+      if (currentDisplayType === 'rofan') {
+        google.script.run
+          .withSuccessHandler(fillNamesList)
+          .getRofanimList();
+      } else {
+        google.script.run
+          .withSuccessHandler(fillNamesList)
+          .getRofimList();
+      }
+    }
+    
+    function fillNamesList(names) {
+      const select = document.getElementById('nameSelect');
+      select.innerHTML = names.map(name => 
+        `<option value="${name}">${name}</option>`
+      ).join('');
+      handleNameChange();
+    }
+    
+    function handleMonthChange() {
+      handleNameChange();
+    }
+    
+    function handleShiftTypeChange() {
+  handleNameChange();
+}
+
+// עדכון הפונקציה המקורית
+function handleNameChange() {
+  const name = document.getElementById('nameSelect').value;
+  const month = document.getElementById('monthSelect').value;
+  const shiftType = document.getElementById('shiftType').value;
+  
+  if (currentDisplayType === 'rofan') {
+    google.script.run
+      .withSuccessHandler(updateRofanDisplay)
+      .getRofanDataWithShiftFilter(name, month, shiftType);
+  } else {
+    google.script.run
+      .withSuccessHandler(updateRofeDisplay)
+      .getRofeData(name, month);
+  }
+}
+
+    function handleDisplayTypeChange() {
+      currentDisplayType = document.getElementById('displayType').value;
+      document.getElementById('rofanDisplay').style.display = 
+        currentDisplayType === 'rofan' ? 'block' : 'none';
+      document.getElementById('rofeDisplay').style.display = 
+        currentDisplayType === 'rofe' ? 'block' : 'none';
+      loadNamesList();
+    }
+    
+    function handleNameChange() {
+      const name = document.getElementById('nameSelect').value;
+      const month = document.getElementById('monthSelect').value;
+      
+      if (currentDisplayType === 'rofan') {
+        google.script.run
+          .withSuccessHandler(updateRofanDisplay)
+          .getRofanData(name, month);
+      } else {
+        google.script.run
+          .withSuccessHandler(updateRofeDisplay)
+          .getRofeData(name, month);
+      }
+    }
+    
+function updateRofanDisplay(data) {
+   document.getElementById('homeShifts').textContent = data.homeShifts;
+   document.getElementById('clinicShifts').textContent = data.clinicShifts;
+   
+   // עדכון שעות לפי סוג משמרת
+   document.getElementById('hoursRefuahShlema').textContent = 
+       (data.hoursByType['רפואה שלמה'] || 0).toFixed(2);
+   document.getElementById('hoursMizamTrio').textContent = 
+       (data.hoursByType['מיזם טריו'] || 0).toFixed(2);
+   document.getElementById('hoursDemo').textContent = 
+       (data.hoursByType['דמו'] || 0).toFixed(2);
+   document.getElementById('hoursHachshara').textContent = 
+       (data.hoursByType['הכשרה'] || 0).toFixed(2);
+
+   document.getElementById('totalHours').textContent = data.totalHours.toFixed(2);
+   document.getElementById('hourlyRate').textContent = data.hourlyRate.toFixed(2) + ' ₪';
+   document.getElementById('socialTerms').textContent = data.socialTerms.toFixed(2) + ' ₪';
+   document.getElementById('employerCost').textContent = data.employerCost.toFixed(2) + ' ₪';
+   
+   const totalPayment = (data.totalHours * data.hourlyRate) + data.socialTerms;
+   document.getElementById('totalPayment').textContent = totalPayment.toFixed(2) + ' ₪';
+}
+
+
+function updateRofeDisplay(data) {
+    // עדכון מספר המשמרות
+    document.getElementById('totalShifts').textContent = data.totalShifts;
+    
+    // טיפול בשעות דמו
+    const demoSection = document.getElementById('demoHoursSection');
+    if (data.demoHours > 0) {
+        demoSection.classList.remove('hidden');
+        document.getElementById('demoHours').textContent = data.demoHours.toFixed(2);
+        document.getElementById('demoRate').textContent = data.demoRate.toFixed(2) + ' ₪';
+    } else {
+        demoSection.classList.add('hidden');
+    }
+
+    // טיפול בשעות מיזם טריו
+    const trioSection = document.getElementById('trioHoursSection');
+    if (data.trioHours > 0) {
+        trioSection.classList.remove('hidden');
+        document.getElementById('trioHours').textContent = data.trioHours.toFixed(2);
+        document.getElementById('trioRate').textContent = data.trioRate.toFixed(2) + ' ₪';
+    } else {
+        trioSection.classList.add('hidden');
+    }
+
+    // טיפול בשעות רפואה שלמה
+    const refuahShlemaSection = document.getElementById('refuahShlemaSection');
+    if (data.refuahShlemaHours > 0) {
+        refuahShlemaSection.classList.remove('hidden');
+        document.getElementById('refuahShlemaHours').textContent = data.refuahShlemaHours.toFixed(2);
+        document.getElementById('refuahShlemaRate').textContent = data.refuahShlemaRate.toFixed(2) + ' ₪';
+    } else {
+        refuahShlemaSection.classList.add('hidden');
+    }
+    
+    // חישוב סך הכל לתשלום כולל מע"מ
+    const totalPayment = (
+        (data.demoHours * data.demoRate) + 
+        (data.trioHours * data.trioRate) +
+        (data.refuahShlemaHours * data.refuahShlemaRate)
+    ) * data.vat;
+    
+    document.getElementById('rofeTotalPayment').textContent = totalPayment.toFixed(2) + ' ₪';
+}
+</script>
+</body>
+</html>

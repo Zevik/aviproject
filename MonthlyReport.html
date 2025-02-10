@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>דוח חודשי</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-6 max-w-7xl">
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">דוח חודשי</h1>
+      
+<!-- פילטרים -->
+<div class="bg-gray-50 rounded-lg p-4 mb-6 space-y-4">
+ <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+   <div>
+     <label class="block text-sm font-medium text-gray-700 mb-1">בחר חודש</label>
+     <select id="monthSelect" onchange="this.blur(); loadReport()" 
+             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+     </select>
+   </div>
+   
+   <div>
+     <label class="block text-sm font-medium text-gray-700 mb-1">סוג משמרת</label>
+     <select id="shiftType" onchange="this.blur(); loadReport()"
+             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+       <option value="מיזם טריו">מיזם טריו</option>
+       <option value="רפואה שלמה">רפואה שלמה</option>
+       <option value="דמו">דמו</option>
+       <option value="הכשרה">הכשרה</option>
+     </select>
+   </div>
+ </div>
+</div>
+
+      <!-- טבלת נתונים -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">רפואן</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">משמרות בית</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">משמרות מרפאה</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סה"כ שעות</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">שכר שעתי</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תנאים סוציאליים</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">עלות מעסיק</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">בונוס</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סה"כ תשלום</th>
+            </tr>
+          </thead>
+          <tbody id="reportTable" class="bg-white divide-y divide-gray-200">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      google.script.run
+        .withSuccessHandler(initializeMonthSelect)
+        .getAvailableMonths();
+    };
+    
+    function initializeMonthSelect(months) {
+      const select = document.getElementById('monthSelect');
+      select.innerHTML = months.map(month => 
+        `<option value="${month}">${month}</option>`
+      ).join('');
+      
+      google.script.run
+        .withSuccessHandler(defaultMonth => {
+          if (months.includes(defaultMonth)) {
+            select.value = defaultMonth;
+          }
+          loadReport();
+        })
+        .getDefaultMonth();
+    }
+    
+    function loadReport() {
+      const month = document.getElementById('monthSelect').value;
+      const shiftType = document.getElementById('shiftType').value;
+      
+      google.script.run
+        .withSuccessHandler(updateReportTable)
+        .getMonthlyReportData(month, shiftType);
+    }
+    
+    function updateReportTable(data) {
+      const tbody = document.getElementById('reportTable');
+      tbody.innerHTML = '';
+      
+      data.forEach(rofan => {
+        const totalPayment = (rofan.totalHours * rofan.hourlyRate) + rofan.socialTerms + rofan.bonus;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.name}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.homeShifts}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.clinicShifts}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.totalHours.toFixed(2)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.hourlyRate.toFixed(2)} ₪</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.socialTerms.toFixed(2)} ₪</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.employerCost.toFixed(2)} ₪</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.bonus.toFixed(2)} ₪</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${totalPayment.toFixed(2)} ₪</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+  </script>
+</body>
+</html>
