@@ -94,7 +94,7 @@
       tbody.innerHTML = '';
       
       data.forEach(rofan => {
-        const totalPayment = (rofan.totalHours * rofan.hourlyRate) + rofan.socialTerms + rofan.bonus;
+        const totalPayment = (rofan.totalHours * rofan.hourlyRate) + (rofan.socialTerms || 0) + (rofan.bonus || 0);
         
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -103,8 +103,8 @@
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.clinicShifts}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.totalHours.toFixed(2)}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.hourlyRate.toFixed(2)} ₪</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.socialTerms.toFixed(2)} ₪</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.employerCost.toFixed(2)} ₪</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${(rofan.socialTerms || 0).toFixed(2)} ₪</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${(rofan.employerCost || 0).toFixed(2)} ₪</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.bonus.toFixed(2)} ₪</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${totalPayment.toFixed(2)} ₪</td>
         `;

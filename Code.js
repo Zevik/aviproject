@@ -322,7 +322,6 @@ function calculateTotalHours(data) {
       return total + hours + (minutes / 60);
     }
     
-    console.log('Warning: Could not parse duration format:', duration);
     return total;
   }, 0);
 }
@@ -330,20 +329,18 @@ function calculateTotalHours(data) {
 function getRofanId(rofanName) {
   const sheet = SpreadsheetApp.openById(MAIN_SPREADSHEET_ID).getSheetByName('כרטיס רפואן');
   const data = sheet.getRange('B:F').getValues();
-  const row = data.find(row => row[0] === rofanName);
-  return row ? row[4] : null; // עמודה F - תעודת זהות
+  const row = data.find(row => row[0] === rofanName); // Column B - Rofan Name
+  return row ? row[4] : null; // Column F - ID
 }
 
 function getSocialTermsData(rofanId, selectedMonth) {
   if (!rofanId) {
-    logToSheet(`Rofan ID is null, cannot fetch social terms data.`);
     return { socialTerms: 0, employerCost: 0 };
   }
 
   try {
     const socialSheet = SpreadsheetApp.openById(MAIN_SPREADSHEET_ID).getSheetByName(selectedMonth);
     if (!socialSheet) {
-      logToSheet(`Sheet "${selectedMonth}" not found for Rofan ID "${rofanId}".`);
       return { socialTerms: 0, employerCost: 0 };
     }
 
@@ -352,30 +349,15 @@ function getSocialTermsData(rofanId, selectedMonth) {
     const row = data.find(row => row[3] == rofanId); // Find the row matching the rofanId
 
     if (row) {
-      const socialTerms = row[9] || 0;
-      const employerCost = row[17] || 0;
-      logToSheet(`Found data in sheet "${selectedMonth}" for Rofan ID "${rofanId}": socialTerms=${socialTerms}, employerCost=${employerCost}`);
+      const socialTerms = row[9] || 0; // Column J - תנאים סוציאליים
+      const employerCost = row[17] || 0; // Column R - עלות מעסיק
       return { socialTerms: socialTerms, employerCost: employerCost };
     } else {
-      logToSheet(`No data found in sheet "${selectedMonth}" for Rofan ID "${rofanId}".`);
       return { socialTerms: 0, employerCost: 0 };
     }
   } catch (e) {
-    logToSheet(`Error in getSocialTermsData for Rofan ID "${rofanId}": ${e}`);
     return { socialTerms: 0, employerCost: 0 };
   }
-}
-
-function logToSheet(message) {
-  const ss = SpreadsheetApp.openById(MAIN_SPREADSHEET_ID);
-  let logSheet = ss.getSheetByName('Log');
-
-  if (!logSheet) {
-    logSheet = ss.insertSheet('Log');
-    logSheet.appendRow(['Timestamp', 'Log Message']);
-  }
-
-  logSheet.appendRow([new Date(), message]);
 }
 
 function getHourlyRate(rofanName) {
