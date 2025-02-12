@@ -92,10 +92,25 @@
     function updateReportTable(data) {
       const tbody = document.getElementById('reportTable');
       tbody.innerHTML = '';
-      
+
+      // Initialize totals
+      let totalHomeShifts = 0;
+      let totalClinicShifts = 0;
+      let totalHours = 0;
+      let totalSocialTerms = 0;
+      let totalEmployerCost = 0;
+      let totalBonus = 0;
+      let totalPayment = 0;
+
       data.forEach(rofan => {
-        const totalPayment = (rofan.totalHours * rofan.hourlyRate) + (rofan.socialTerms || 0) + (rofan.bonus || 0);
-        
+        totalHomeShifts += rofan.homeShifts;
+        totalClinicShifts += rofan.clinicShifts;
+        totalHours += rofan.totalHours;
+        totalSocialTerms += rofan.socialTerms || 0;
+        totalEmployerCost += rofan.employerCost || 0;
+        totalBonus += rofan.bonus;
+        totalPayment += (rofan.totalHours * rofan.hourlyRate) + (rofan.socialTerms || 0) + rofan.bonus;
+
         const row = document.createElement('tr');
         row.innerHTML = `
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.name}</td>
@@ -106,10 +121,26 @@
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${(rofan.socialTerms || 0).toFixed(2)} ₪</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${(rofan.employerCost || 0).toFixed(2)} ₪</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${rofan.bonus.toFixed(2)} ₪</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${totalPayment.toFixed(2)} ₪</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${((rofan.totalHours * rofan.hourlyRate) + (rofan.socialTerms || 0) + rofan.bonus).toFixed(2)} ₪</td>
         `;
         tbody.appendChild(row);
       });
+
+      // Create total row
+      const totalRow = document.createElement('tr');
+      totalRow.classList.add('font-bold');
+      totalRow.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">סה"כ</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${totalHomeShifts}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${totalClinicShifts}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${totalHours.toFixed(2)}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${totalSocialTerms.toFixed(2)} ₪</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${totalEmployerCost.toFixed(2)} ₪</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${totalBonus.toFixed(2)} ₪</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">${totalPayment.toFixed(2)} ₪</td>
+      `;
+      tbody.appendChild(totalRow);
     }
   </script>
 </body>
